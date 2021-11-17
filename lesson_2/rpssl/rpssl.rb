@@ -1,6 +1,6 @@
 require "yaml"
 
-VALID_CHOICES = { 
+VALID_CHOICES = {
   "r" => "Rock",
   "p" => "Paper",
   "sc" => "Scissors",
@@ -14,7 +14,7 @@ WINNING_COMBINATIONS = {
   Lizard: [:Spock, :Paper],
   Spock: [:Scissors, :Rock]
 }
-WINNING_MESSAGES = YAML.load_file('rpssl_messages.yml')
+WIN_MESSAGES = YAML.load_file('rpssl_messages.yml')
 
 def prompt(message)
   puts "=> #{message}"
@@ -69,9 +69,9 @@ end
 
 def display_result(user_choice, computer_choice, user_name)
   if win?(user_choice, computer_choice)
-    prompt "#{WINNING_MESSAGES[user_choice][computer_choice]}, #{user_name} wins!"
+    prompt "#{WIN_MESSAGES[user_choice][computer_choice]}, #{user_name} wins!"
   elsif win?(computer_choice, user_choice)
-    prompt "#{WINNING_MESSAGES[computer_choice][user_choice]}, Computer wins!"
+    prompt "#{WIN_MESSAGES[computer_choice][user_choice]}, Computer wins!"
   else
     prompt "#{user_choice} ties #{computer_choice}, it's a draw!."
   end
@@ -79,10 +79,13 @@ def display_result(user_choice, computer_choice, user_name)
 end
 
 def display_score(score, user_name)
-  if score[:user_wins] >= score[:computer_wins]
-    prompt "#{user_name} #{score[:user_wins]}, Computer #{score[:computer_wins]}"
+  user_score = score[:user_wins]
+  computer_score = score[:computer_wins]
+
+  if user_score >= computer_score
+    prompt "#{user_name} #{user_score}, Computer #{computer_score}"
   else
-    prompt "Computer #{score[:computer_wins]}, #{user_name} #{score[:user_wins]}"
+    prompt "Computer #{computer_score}, #{user_name} #{user_score}"
   end
   sleep 3
 end
