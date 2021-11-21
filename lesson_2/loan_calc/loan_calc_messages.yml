@@ -35,9 +35,9 @@
 '
   :summary: 'Con un monto de préstamo de $%{loan_amount}, una APR de %{annual_percentage_rate}%{percent_sign},
     y un plazo de préstamo de %{num_of_years} años, %{num_of_months} meses:'
-  :monthly_payment: "=> Pago Mensual: $%{monthly_payment}"
-  :total_payment: "=> Total de %{loan_duration_in_months} Pagos: $%{total_payment}"
-  :total_interest: "=> Interés Total: $%{total_interest}"
+  :monthly_payment: 'Pago Mensual: $%{monthly_payment}'
+  :total_payment: 'Total de %{loan_duration_in_months} Pagos: $%{total_payment}'
+  :total_interest: 'Interés Total: $%{total_interest}'
   :again: "¿Realizar otro cálculo? (y/n) "
   :thank_you: 'Gracias por usar la Calculadora de Préstamos Hipotecarios 1.0!
 
