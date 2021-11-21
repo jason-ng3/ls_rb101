@@ -1,0 +1,45 @@
+---
+:en:
+  :welcome: 'Mortgage Loan Calculator 1.0
+
+'
+  :loan_amount: 'Loan Amount: '
+  :invalid_number: 'Invalid input. Enter a valid number: '
+  :annual_percentage_rate: 'Annual Percentage Rate (APR) (in %): '
+  :loan_num_of_years: "Loan Duration (in Years and Months):\n=> Years: "
+  :loan_num_of_months: 'Months: '
+  :invalid_loan_duration: 'Please enter a positive loan term value.
+
+'
+  :summary: 'With a loan amount of $%{loan_amount}, an APR of %{annual_percentage_rate}%{percent_sign},
+    and a loan term of %{num_of_years} years, %{num_of_months} months:'
+  :monthly_payment: 'Monthly Payment: $%{monthly_payment}'
+  :total_payment: 'Total of %{loan_duration_in_months} Payments: $%{total_payment}'
+  :total_interest: 'Total Interest: $%{total_interest}'
+  :again: 'Perform another calculation? (y/n) '
+  :thank_you: 'Thank you for using Mortgage Loan Calculator 1.0!
+
+'
+  :again_error: 'Enter y or n: '
+:es:
+  :welcome: 'Calculadora de Préstamos Hipotecarios 1.0
+
+'
+  :loan_amount: 'Monto del Préstamo: '
+  :invalid_number: 'Entrada inválida. Ingrese un número válido: '
+  :annual_percentage_rate: 'Tasa de Porcentaje Anual (APR) (en %): '
+  :loan_num_of_years: "Duración del Préstamo (en Años y Meses):\n=> Años: "
+  :loan_num_of_months: 'Meses: '
+  :invalid_loan_duration: 'Ingrese un valor de plazo de préstamo positivo.
+
+'
+  :summary: 'Con un monto de préstamo de $%{loan_amount}, una APR de %{annual_percentage_rate}%{percent_sign},
+    y un plazo de préstamo de %{num_of_years} años, %{num_of_months} meses:'
+  :monthly_payment: "=> Pago Mensual: $%{monthly_payment}"
+  :total_payment: "=> Total de %{loan_duration_in_months} Pagos: $%{total_payment}"
+  :total_interest: "=> Interés Total: $%{total_interest}"
+  :again: "¿Realizar otro cálculo? (y/n) "
+  :thank_you: 'Gracias por usar la Calculadora de Préstamos Hipotecarios 1.0!
+
+'
+  :again_error: 'Ingrese y or n: '
