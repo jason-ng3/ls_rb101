@@ -1,7 +1,7 @@
 require 'yaml'
 
 MESSAGES = YAML.load_file('loan_calc_messages.yml')
-LANGUAGE = :en
+LANGUAGE = :es
 
 def prompt(message)
   print "=> #{MESSAGES[LANGUAGE][message]}"
@@ -75,22 +75,6 @@ def loan_duration_in_months(num_of_years, num_of_months)
   loan_duration_in_months
 end
 
-def retrieve_loan_duration_in_months
-  num_of_years = nil
-  num_of_months = nil
-
-  loop do
-    prompt :loan_duration_num_of_years
-    num_of_years = gets.chomp
-    prompt :loan_duration_num_of_months
-    num_of_months = gets.chomp
-    break if valid_number?(num_of_years) && valid_number?(num_of_months)
-    prompt :invalid_number
-  end
-
-  (num_of_years.to_i * 12) + num_of_months
-end
-
 def monthly_payment(loan_amount, monthly_interest_rate, loan_duration_in_months)
   if monthly_interest_rate.zero?
     loan_amount / loan_duration_in_months
@@ -122,9 +106,10 @@ prompt :welcome
 loop do
   loan_amount = retrieve_loan_amount
   annual_percentage_rate = retrieve_apr
-  monthly_interest_rate = (annual_percentage_rate / 100) / 12
   num_of_years = retrieve_loan_num_of_years
   num_of_months = retrieve_loan_num_of_months
+  
+  monthly_interest_rate = (annual_percentage_rate / 100) / 12
   loan_duration_in_months = loan_duration_in_months(num_of_years, num_of_months)
   monthly_payment = monthly_payment(loan_amount,
                                     monthly_interest_rate,
