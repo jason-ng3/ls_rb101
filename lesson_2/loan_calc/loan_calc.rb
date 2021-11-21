@@ -64,7 +64,7 @@ def retrieve_loan_num_of_months
 end
 
 def loan_duration_in_months(num_of_years, num_of_months)
-  loan_duration_in_months = nil 
+  loan_duration_in_months = nil
 
   loop do
     loan_duration_in_months = (num_of_years * 12) + num_of_months
