@@ -63,10 +63,12 @@ def retrieve_loan_num_of_months
   num_of_months.to_i
 end
 
-def loan_duration_in_months(num_of_years, num_of_months)
+def retrieve_loan_duration_in_months
   loan_duration_in_months = nil
 
   loop do
+    num_of_years = retrieve_loan_num_of_years
+    num_of_months = retrieve_loan_num_of_months
     loan_duration_in_months = (num_of_years * 12) + num_of_months
     break unless loan_duration_in_months == 0
     prompt :invalid_loan_duration
@@ -82,6 +84,30 @@ def monthly_payment(loan_amount, monthly_interest_rate, loan_duration_in_months)
     loan_amount * (monthly_interest_rate /
     (1 - (1 + monthly_interest_rate)**(-loan_duration_in_months)))
   end
+end
+
+def display_summary(loan_amount, annual_percentage_rate,
+                    loan_duration_in_months)
+  puts format(MESSAGES[LANGUAGE][:summary],
+              loan_amount: format('%.2f', loan_amount).to_s,
+              annual_percentage_rate: annual_percentage_rate.to_s,
+              percent_sign: format('%%').to_s,
+              num_of_years: (loan_duration_in_months / 12).to_s,
+              num_of_months: (loan_duration_in_months % 12).to_s)
+end
+
+def display_final_output(monthly_payment, total_payment, total_interest,
+                         loan_duration_in_months)
+
+  puts format(MESSAGES[LANGUAGE][:monthly_payment],
+              monthly_payment: format('%.2f', monthly_payment).to_s)
+
+  puts format(MESSAGES[LANGUAGE][:total_payment],
+              total_payment: format('%.2f', total_payment).to_s,
+              loan_duration_in_months: loan_duration_in_months.to_s)
+
+  puts format(MESSAGES[LANGUAGE][:total_interest],
+              total_interest: format('%.2f', total_interest).to_s)
 end
 
 def again?
@@ -106,11 +132,9 @@ prompt :welcome
 loop do
   loan_amount = retrieve_loan_amount
   annual_percentage_rate = retrieve_apr
-  num_of_years = retrieve_loan_num_of_years
-  num_of_months = retrieve_loan_num_of_months
+  loan_duration_in_months = retrieve_loan_duration_in_months
 
   monthly_interest_rate = (annual_percentage_rate / 100) / 12
-  loan_duration_in_months = loan_duration_in_months(num_of_years, num_of_months)
   monthly_payment = monthly_payment(loan_amount,
                                     monthly_interest_rate,
                                     loan_duration_in_months)
@@ -118,24 +142,9 @@ loop do
   total_interest = total_payment - loan_amount
 
   system 'clear'
-
-  puts format(MESSAGES[LANGUAGE][:summary],
-              loan_amount: "#{format('%.2f', loan_amount)}",
-              annual_percentage_rate: "#{annual_percentage_rate}",
-              percent_sign: "#{format('%%')}",
-              num_of_years: "#{loan_duration_in_months}",
-              num_of_months: "#{num_of_months}")
-
-  puts format(MESSAGES[LANGUAGE][:monthly_payment],
-              monthly_payment: "#{format('%.2f', monthly_payment)}")
-
-  puts format(MESSAGES[LANGUAGE][:total_payment],
-              total_payment: "#{format('%.2f', total_payment)}",
-              loan_duration_in_months: "#{loan_duration_in_months}")
-
-  puts format(MESSAGES[LANGUAGE][:total_interest],
-              total_interest: "#{format('%.2f', total_interest)}")
-
+  display_summary(loan_amount, annual_percentage_rate, loan_duration_in_months)
+  display_final_output(monthly_payment, total_payment, total_interest,
+                       loan_duration_in_months)
   break unless again?
   system 'clear'
 end
