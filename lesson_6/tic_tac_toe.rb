@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'yaml'
 
 MESSAGES = YAML.load_file('ttt_messages.yml')
@@ -22,6 +24,7 @@ def who_goes_first?
   loop do
     answer = gets.chomp
     break if valid_answers.include?(answer)
+
     prompt :enter_valid_option
   end
 
@@ -32,7 +35,7 @@ def first_player
   case who_goes_first?
   when '1' then first_player = 'Player'
   when '2' then first_player = 'Computer'
-  when '3' then first_player = ['Player', 'Computer'].sample
+  when '3' then first_player = %w[Player Computer].sample
   end
 
   first_player
@@ -46,6 +49,7 @@ def retrieve_difficulty
   loop do
     answer = gets.chomp
     break if valid_answers.include?(answer)
+
     prompt :enter_valid_option
   end
 
@@ -93,19 +97,18 @@ end
 
 def player_places_piece!(board)
   square = ''
-  valid_squares = ("1".."9").to_a 
 
   loop do
-    puts format(MESSAGES[:choose_square], 
-                empty_squares: "#{joinor(empty_squares(board))}")
+    puts format(MESSAGES[:choose_square],
+                empty_squares: joinor(empty_squares(board)).to_s)
 
-    square = gets.chomp
-    break if valid_squares.include?(square)
+    square = gets.chomp.to_i
+    break if empty_squares(board).include?(square)
 
     prompt :invalid_choice
   end
 
-  board[square.to_i] = PLAYER_MARKER
+  board[square] = PLAYER_MARKER
 end
 
 def find_at_risk_square(line, board, marker)
@@ -116,7 +119,7 @@ def find_at_risk_square(line, board, marker)
   end
 end
 
-def defensive_square(board)
+def find_defensive_square(board)
   defensive_square = nil
 
   WINNING_LINES.each do |line|
@@ -127,7 +130,7 @@ def defensive_square(board)
   defensive_square
 end
 
-def offensive_square(board)
+def find_offensive_square(board)
   offensive_square = nil
 
   WINNING_LINES.each do |line|
@@ -139,22 +142,18 @@ def offensive_square(board)
 end
 
 def intermediate_level_square(board)
-  if defensive_square(board)
-    square = defensive_square(board)
-  else
-    square = empty_squares(board).sample
-  end
+  find_defensive_square(board) || empty_squares(board).sample
 end
 
 def advanced_level_square(board)
-  if offensive_square(board)
-    square = offensive_square(board)
-  elsif defensive_square(board)
-    square = defensive_square(board)
+  if find_offensive_square(board)
+    find_offensive_square(board)
+  elsif find_defensive_square(board)
+    find_defensive_square(board)
   elsif board[CENTER_SQUARE] == INITIAL_MARKER
-    square = CENTER_SQUARE
+    CENTER_SQUARE
   else
-    square = empty_squares(board).sample
+    empty_squares(board).sample
   end
 end
 
@@ -190,18 +189,15 @@ end
 
 def detect_winner(board)
   WINNING_LINES.each do |line|
-    if board.values_at(*line).count(PLAYER_MARKER) == 3
-      return 'Player'
-    elsif board.values_at(*line).count(COMPUTER_MARKER) == 3
-      return 'Computer'
-    end
+    return 'Player' if board.values_at(*line).count(PLAYER_MARKER) == 3
+    return 'Computer' if board.values_at(*line).count(COMPUTER_MARKER) == 3
   end
   nil
 end
 
 def display_result(board)
   if someone_won?(board)
-    puts format(MESSAGES[:win], winner: "#{detect_winner(board)}")
+    puts format(MESSAGES[:win], winner: detect_winner(board).to_s)
   else
     prompt :tie
   end
@@ -216,9 +212,9 @@ def update_score(board, score)
 end
 
 def display_score(score)
-  puts format(MESSAGES[:score], 
-              player_score: "#{score[:Player]}",
-              computer_score: "#{score[:Computer]}")
+  puts format(MESSAGES[:score],
+              player_score: score[:Player].to_s,
+              computer_score: score[:Computer].to_s)
 end
 
 def display_champion(score)
@@ -243,17 +239,17 @@ end
 
 # Program starts here
 system 'clear'
-puts format(MESSAGES[:welcome], winning_score: "#{WINNING_SCORE}")
+puts format(MESSAGES[:welcome], winning_score: WINNING_SCORE.to_s)
 
 loop do
   score = { Player: 0, Computer: 0 }
   current_player = first_player
   difficulty = retrieve_difficulty
-  
+
   loop do
-    board = initialize_board 
-    
-    loop do 
+    board = initialize_board
+
+    loop do
       display_board(board)
       place_piece!(board, current_player, difficulty)
       current_player = alternate_player(current_player)
@@ -269,8 +265,9 @@ loop do
     gets
     break if score.values.include?(WINNING_SCORE)
   end
-  
+
   break unless play_again?
+
   system 'clear'
 end
 
