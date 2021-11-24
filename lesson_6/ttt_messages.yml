@@ -1,0 +1,25 @@
+---
+:welcome: 'Welcome to Tic Tac Toe! First player to %{winning_score} is the champion!
+
+'
+:who_goes_first: |
+  Who should go first?
+  1) Player
+  2) Computer
+  3) Let Computer choose who goes first
+:difficulty: |
+  Choose a difficulty level:
+  1) Easy
+  2) Intermediate
+  3) Advanced
+:enter_valid_option: Enter 1, 2 or 3
+:choose_square: "=> Choose a square (%{empty_squares}):"
+:invalid_choice: Sorry, that's not a valid choice.
+:score: "=> Player %{player_score}, Computer %{computer_score}"
+:player_champion: Player is the champion!
+:computer_champion: Computer is the champion!
+:play_again: Play again? (y or n)
+:win: "=> %{winner} won!"
+:tie: "=> It's a tie!"
+:continue: Hit Enter to continue.
+:thank_you: Thanks for playing Tic Tac Toe! Good bye!
