@@ -3,6 +3,8 @@
 require 'yaml'
 
 MESSAGES = YAML.load_file('ttt_messages.yml')
+VALID_ANSWERS = %w[1 2 3].freeze
+VALID_YES_NO = %w[y yes n no].freeze
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
@@ -11,6 +13,10 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
                 [[1, 5, 9], [3, 5, 7]]
 WINNING_SCORE = 5
 CENTER_SQUARE = 5
+GAME_OPTIONS = {
+  starting_player: { '1' => 'Player', '2' => 'Computer', '3' => %w[Player Computer].freeze },
+  difficulty: { '1' => 'Easy', '2' => 'Intermediate', '3' => 'Advanced' }
+}.freeze
 
 def prompt(message)
   puts "=> #{MESSAGES[message]}"
@@ -18,12 +24,11 @@ end
 
 def who_goes_first?
   answer = ''
-  valid_answers = %w[1 2 3]
   prompt :who_goes_first
 
   loop do
     answer = gets.chomp
-    break if valid_answers.include?(answer)
+    break if VALID_ANSWERS.include?(answer)
 
     prompt :enter_valid_option
   end
@@ -31,24 +36,22 @@ def who_goes_first?
   answer
 end
 
-def first_player
-  case who_goes_first?
-  when '1' then first_player = 'Player'
-  when '2' then first_player = 'Computer'
-  when '3' then first_player = %w[Player Computer].sample
+def starting_player
+  choice = who_goes_first?
+  if choice == '3'
+    GAME_OPTIONS[:starting_player][choice].sample
+  else
+    GAME_OPTIONS[:starting_player][choice]
   end
-
-  first_player
 end
 
 def retrieve_difficulty
   answer = ''
-  valid_answers = %w[1 2 3]
   prompt :difficulty
 
   loop do
     answer = gets.chomp
-    break if valid_answers.include?(answer)
+    break if VALID_ANSWERS.include?(answer)
 
     prompt :enter_valid_option
   end
@@ -102,54 +105,42 @@ def player_places_piece!(board)
     puts format(MESSAGES[:choose_square],
                 empty_squares: joinor(empty_squares(board)).to_s)
 
-    square = gets.chomp.to_i
-    break if empty_squares(board).include?(square)
+    square = gets.chomp
+    break if empty_squares(board).map(&:to_s).include?(square)
 
     prompt :invalid_choice
   end
 
-  board[square] = PLAYER_MARKER
+  board[square.to_i] = PLAYER_MARKER
 end
 
 def find_at_risk_square(line, board, marker)
   if board.values_at(*line).count(marker) == 2
     board.select { |k, v| line.include?(k) && v == INITIAL_MARKER }.keys.first
-  else
-    nil
   end
 end
 
-def find_defensive_square(board)
-  defensive_square = nil
+def find_strategic_square(board, participant)
+  strategic_square = nil
 
   WINNING_LINES.each do |line|
-    defensive_square = find_at_risk_square(line, board, PLAYER_MARKER)
-    break if defensive_square
+    strategic_square = find_at_risk_square(line, board, participant)
+    break if strategic_square
   end
 
-  defensive_square
-end
-
-def find_offensive_square(board)
-  offensive_square = nil
-
-  WINNING_LINES.each do |line|
-    offensive_square = find_at_risk_square(line, board, COMPUTER_MARKER)
-    break if offensive_square
-  end
-
-  offensive_square
+  strategic_square
 end
 
 def intermediate_level_square(board)
-  find_defensive_square(board) || empty_squares(board).sample
+  find_strategic_square(board, PLAYER_MARKER) || empty_squares(board).sample
 end
 
 def advanced_level_square(board)
-  if find_offensive_square(board)
-    find_offensive_square(board)
-  elsif find_defensive_square(board)
-    find_defensive_square(board)
+  strategic_square = find_strategic_square(board, COMPUTER_MARKER) ||
+                     find_strategic_square(board, PLAYER_MARKER)
+
+  if strategic_square
+    strategic_square
   elsif board[CENTER_SQUARE] == INITIAL_MARKER
     CENTER_SQUARE
   else
@@ -157,21 +148,21 @@ def advanced_level_square(board)
   end
 end
 
-def computer_places_piece!(board, difficulty)
-  case difficulty
-  when '1' then square = empty_squares(board).sample
-  when '2' then square = intermediate_level_square(board)
-  when '3' then square = advanced_level_square(board)
+def computer_places_piece!(board, chosen_difficulty)
+  case chosen_difficulty
+  when 'Easy' then square = empty_squares(board).sample
+  when 'Intermediate' then square = intermediate_level_square(board)
+  when 'Advanced' then square = advanced_level_square(board)
   end
 
   board[square] = COMPUTER_MARKER
 end
 
-def place_piece!(board, current_player, difficulty)
+def place_piece!(board, current_player, chosen_difficulty)
   if current_player == 'Player'
     player_places_piece!(board)
   elsif current_player == 'Computer'
-    computer_places_piece!(board, difficulty)
+    computer_places_piece!(board, chosen_difficulty)
   end
 end
 
@@ -226,7 +217,6 @@ def display_champion(score)
 end
 
 def play_again?
-  valid_answers = %w[y yes n no]
   answer = ''
 
   loop do
@@ -243,15 +233,15 @@ puts format(MESSAGES[:welcome], winning_score: WINNING_SCORE.to_s)
 
 loop do
   score = { Player: 0, Computer: 0 }
-  current_player = first_player
-  difficulty = retrieve_difficulty
+  current_player = starting_player
+  chosen_difficulty = GAME_OPTIONS[:difficulty][retrieve_difficulty]
 
   loop do
     board = initialize_board
 
     loop do
       display_board(board)
-      place_piece!(board, current_player, difficulty)
+      place_piece!(board, current_player, chosen_difficulty)
       current_player = alternate_player(current_player)
       break if someone_won?(board) || board_full?(board)
     end
