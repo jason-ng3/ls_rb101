@@ -232,7 +232,6 @@ loop do
     # deal starts here
     loop do
       deck = initialize_deck if deck.count < (26 * NUM_OF_DECKS)
-      puts "Available Cards: #{deck.count}"
       round = { dealer_cards: [], player_cards: [], dealer_total: nil, player_total: 0 }
 
       first_deal(round, deck)
