@@ -56,8 +56,8 @@ def sum_if_ace_equals_11(values)
   sum
 end
 
-def total(participants, participant)
-  values = participants[participant][:cards].map { |card| card[0...-1] }
+def total(round, participants_cards)
+  values = round[participants_cards].map { |card| card[0...-1] }
   sum = sum_if_ace_equals_11(values)
 
   values.select { |value| value == 'A' }.count.times do
@@ -67,14 +67,14 @@ def total(participants, participant)
   sum
 end
 
-def deal_card(participants, participant, deck)
-  participants[participant][:cards] << deck.shift
+def deal_card(round, participants_cards, deck)
+  round[participants_cards] << deck.shift
 end
 
-def first_deal(participants, deck)
+def first_deal(round, deck)
   2.times do
-    deal_card(participants, :player, deck)
-    deal_card(participants, :dealer, deck)
+    deal_card(round, :player_cards, deck)
+    deal_card(round, :dealer_cards, deck)
   end
 end
 
@@ -82,47 +82,47 @@ def busted?(total)
   total > BUST_THRESHOLD
 end
 
-def player_move(participants, deck)
+def player_move(round, deck)
   loop do
     decision = player_hit_or_stay?
-    deal_card(participants, :player, deck) if VALID_HIT.include?(decision)
-    participants[:player][:total] = total(participants, :player)
-    break if VALID_STAY.include?(decision) || busted?(participants[:player][:total])
+    deal_card(round, :player_cards, deck) if VALID_HIT.include?(decision)
+    round[:player_total] = total(round, :player_cards)
+    break if VALID_STAY.include?(decision) || busted?(round[:player_total])
 
     clear_screen
-    display_cards(participants)
+    display_cards(round)
   end
 end
 
-def player_turn(participants, deck)
-  player_move(participants, deck)
-  participants[:dealer][:total] = total(participants, :dealer)
+def player_turn(round, deck)
+  player_move(round, deck)
+  round[:dealer_total] = total(round, :dealer_cards)
 
-  return unless busted?(participants[:player][:total])
+  return unless busted?(round[:player_total])
 
   clear_screen
-  display_cards(participants)
-  display_result(participants)
+  display_cards(round)
+  display_result(round)
 end
 
-def dealer_move(participants, deck)
+def dealer_move(round, deck)
   loop do
-    break if participants[:dealer][:total] >= DEALER_THRESHOLD
+    break if round[:dealer_total] >= DEALER_THRESHOLD
 
-    deal_card(participants, :dealer, deck)
-    participants[:dealer][:total] = total(participants, :dealer)
+    deal_card(round, :dealer_cards, deck)
+    round[:dealer_total] = total(round, :dealer_cards)
     clear_screen
-    display_cards(participants)
+    display_cards(round)
     sleep NUM_OF_SECONDS
   end
 end
 
-def dealer_turn(participants, deck)
+def dealer_turn(round, deck)
   clear_screen
-  display_cards(participants)
+  display_cards(round)
   sleep NUM_OF_SECONDS
-  dealer_move(participants, deck)
-  display_result(participants)
+  dealer_move(round, deck)
+  display_result(round)
 end
 
 def joinand(array, delimiter = ', ', join_word = 'and')
@@ -134,33 +134,33 @@ def joinand(array, delimiter = ', ', join_word = 'and')
   end
 end
 
-def display_cards(participants)
-  if participants[:dealer][:total].nil?
-    puts "Dealer has: #{participants[:dealer][:cards].first} and unknown card"
+def display_cards(round)
+  if round[:dealer_total].nil?
+    puts "Dealer has: #{round[:dealer_cards].first} and unknown card"
   else
-    puts "Dealer has: #{joinand(participants[:dealer][:cards])} for a total of #{participants[:dealer][:total]}"
+    puts "Dealer has: #{joinand(round[:dealer_cards])} for a total of #{round[:dealer_total]}"
   end
 
-  puts "You have: #{joinand(participants[:player][:cards])} for a total of #{participants[:player][:total]}"
+  puts "You have: #{joinand(round[:player_cards])} for a total of #{round[:player_total]}"
   puts
 end
 
-def calculate_result(participants)
-  if busted?(participants[:player][:total])
+def calculate_result(round)
+  if busted?(round[:player_total])
     :player_busted
-  elsif busted?(participants[:dealer][:total])
+  elsif busted?(round[:dealer_total])
     :dealer_busted
-  elsif participants[:player][:total] > participants[:dealer][:total]
+  elsif round[:player_total] > round[:dealer_total]
     :player
-  elsif participants[:dealer][:total] > participants[:player][:total]
+  elsif round[:dealer_total] > round[:player_total]
     :dealer
   else
     :tie
   end
 end
 
-def display_result(participants)
-  case calculate_result(participants)
+def display_result(round)
+  case calculate_result(round)
   when :player_busted then puts 'Player busted. Dealer wins!'
   when :dealer_busted then puts 'Dealer busted. Player wins!'
   when :player        then puts 'Player wins!'
@@ -169,8 +169,8 @@ def display_result(participants)
   end
 end
 
-def update_score!(participants, score)
-  case calculate_result(participants)
+def update_score!(round, score)
+  case calculate_result(round)
   when :player_busted then score[:dealer] += 1
   when :dealer        then score[:dealer] += 1
   when :dealer_busted then score[:player] += 1
@@ -232,15 +232,16 @@ loop do
     # deal starts here
     loop do
       deck = initialize_deck if deck.count < (26 * NUM_OF_DECKS)
-      participants = { dealer: { cards: [], total: nil }, player: { cards: [], total: 0 } }
+      puts "Available Cards: #{deck.count}"
+      round = { dealer_cards: [], player_cards: [], dealer_total: nil, player_total: 0 }
 
-      first_deal(participants, deck)
-      participants[:player][:total] = total(participants, :player)
-      display_cards(participants)
-      player_turn(participants, deck)
-      participants[:dealer][:total] = total(participants, :dealer)
-      dealer_turn(participants, deck) unless busted?(participants[:player][:total])
-      update_score!(participants, score)
+      first_deal(round, deck)
+      round[:player_total] = total(round, :player_cards)
+      display_cards(round)
+      player_turn(round, deck)
+      round[:dealer_total] = total(round, :dealer_cards)
+      dealer_turn(round, deck) unless busted?(round[:player_total])
+      update_score!(round, score)
       display_results(score)
 
       if score.values.include?(WINNING_SCORE)
