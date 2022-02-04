@@ -39,6 +39,7 @@ end
 
 class Human < Player
   def choose
+    puts
     choice = nil
     loop do
       prompt :player_choice
@@ -54,10 +55,11 @@ class Human < Player
   private
 
   def set_name
+    puts 
+    prompt :player_name
+
     n = ''
     loop do
-      clear_screen
-      prompt :player_name
       n = gets.chomp
       break unless n.empty?
       prompt :invalid_name
@@ -220,31 +222,43 @@ class History
     self.last_losing_move = player.move
   end
 
+  def reset
+    self.moves = []
+    self.last_winning_move = nil
+    self.last_losing_move = nil 
+  end
+
   def to_s
-    [moves.join(', ').to_s]
+    moves.map(&:to_s).to_s
   end
 
   private
 
-  attr_writer :last_winning_move, :last_losing_move
+  attr_writer :moves, :last_winning_move, :last_losing_move
 end
 
 # Game Orchestration Engine
 class RPSGame
   include Printable
 
+  OPPONENTS = {
+    '1' => Computer.new,
+    '2' => DwayneJohnson.new,
+    '3' => MichaelScott.new,
+    '4' => SheldonCooper.new
+  }
   WINNING_SCORE = 10
   VALID_RESPONSE = %w(Y y N n)
 
   def play
-    clear_screen
-    display_welcome_message
     loop do
+      clear_screen
       choose_opponent
       play_match
       display_champion
       break unless play_again?
       reset_scores
+      reset_histories 
     end
     display_goodbye_message
   end
@@ -254,33 +268,39 @@ class RPSGame
   attr_reader :human, :computer
 
   def initialize
+    display_welcome_message
+    display_rules
     @human = Human.new
     @computer = nil
   end
 
   def display_welcome_message
+    clear_screen
     prompt :welcome_message
   end
 
+  def display_rules
+    puts 
+    prompt :rules 
+  end
+
   def choose_opponent
-    puts format("=> #{MESSAGES[:choose_opponent]}", name: human.name.to_s)
-    answer = gets.chomp
+    answer = ''
+    loop do 
+      puts format("=> #{MESSAGES[:choose_opponent]}", name: human.name.to_s)
+      answer = gets.chomp
+      break if OPPONENTS.keys.include?(answer)
+      prompt :invalid_choice
+    end
 
-    @computer =
-      case answer
-      when '1' then Computer.new
-      when '2' then DwayneJohnson.new
-      when '3' then MichaelScott.new
-      when '4' then SheldonCooper.new
-      end
-
+    @computer = OPPONENTS[answer]
     clear_screen
   end
 
   def display_score
     human_score = "#{human.name}: #{human.score.value}"
     computer_score = "#{computer.name}: #{computer.score.value}"
-    puts "=> #{human_score}, #{computer_score}"
+    puts "=> #{human_score}, #{computer_score}" 
   end
 
   def choose_moves
@@ -290,7 +310,6 @@ class RPSGame
   end
 
   def display_moves
-    clear_screen
     puts "=> #{human.name} chose #{human.move}."
     puts "=> #{computer.name} chose #{computer.move}."
   end
@@ -319,9 +338,9 @@ class RPSGame
   end
 
   def update_score
-    if human.move > computer.move
+    if human.win?(computer)
       human.score.increment
-    elsif human.move < computer.move
+    elsif computer.win?(human)
       computer.score.increment
     end
   end
@@ -329,7 +348,7 @@ class RPSGame
   def update_human_histories
     if human.win?(computer)
       human.history.update_win(human)
-    elsif human.win?(computer)
+    elsif computer.win?(human)
       human.history.update_loss(human)
       human.history.reset_win
     end
@@ -353,8 +372,10 @@ class RPSGame
     human_history = human.history.to_s
     computer_history = computer.history.to_s
 
-    puts "#{human.name}'s History:\n#{human_history}"
-    puts "#{computer.name}'s History:\n#{computer_history}"
+    puts "=> #{human.name}'s History:\n#{human_history}"
+    puts
+    puts "=> #{computer.name}'s History:\n#{computer_history}"
+    puts  
   end
 
   def display_champion
@@ -387,6 +408,11 @@ class RPSGame
   def reset_scores
     human.score.reset
     computer.score.reset
+  end
+
+  def reset_histories
+    human.history.reset
+    computer.history.reset
   end
 
   def display_goodbye_message
