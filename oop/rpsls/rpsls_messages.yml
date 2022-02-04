@@ -1,0 +1,33 @@
+---
+:welcome_message: Welcome to Rock Paper Scissors Lizard Spock!
+:rules: |-
+  Rock Paper Scissors Lizard Spock is a two-player game. During a round,
+  each player chooses one of Rock, Paper, Scissors, Lizard, or Spock. The following
+  rules determine who wins the round:
+
+  Rock defeats Scissors & Lizard
+  Paper defeats Rock & Spock
+  Scissors defeats Paper & Lizard
+  Lizard defeats Paper & Spock
+  Spock defeats Rock & Scissors
+
+  First to 10 wins is the champion! Let the match begin!
+:player_name: What is your name?
+:invalid_name: Please enter a name.
+:choose_opponent: |-
+  %{name}, with whom would you like to play against?
+  => Enter a number:
+  1) Computer
+  2) Dwayne Johnson
+  3) Michael Scott
+  4) Sheldon Cooper
+:player_choice: 'Please choose one letter:'
+:invalid_choice: Invalid choice.
+:draw: It's a draw!
+:view_history: |-
+  Hit Enter to continue.
+  => Enter h to view a history of the match's moves.
+:invalid_input: Invalid input.
+:play_again: Play again? (y/n)
+:invalid_answer: Please enter y or n.
+:goodbye_message: Thanks for playing Rock Paper Scissors Lizard Spock! Goodbye!
