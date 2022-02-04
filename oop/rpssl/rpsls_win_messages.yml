@@ -1,0 +1,16 @@
+---
+:Rock:
+  :Lizard: Rock crushes Lizard
+  :Scissors: Rock crushes Scissors
+:Paper:
+  :Rock: Paper covers Rock
+  :Spock: Paper disproves Spock
+:Scissors:
+  :Paper: Scissors cuts Paper
+  :Lizard: Scissors decapitates Lizard
+:Spock:
+  :Rock: Spock vaporizes Rock
+  :Scissors: Spock smashes Scissors
+:Lizard:
+  :Spock: Lizard poisons Spock
+  :Paper: Lizard eats Paper
