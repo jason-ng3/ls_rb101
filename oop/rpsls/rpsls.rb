@@ -39,7 +39,6 @@ end
 
 class Human < Player
   def choose
-    puts
     choice = nil
     loop do
       prompt :player_choice
@@ -55,7 +54,7 @@ class Human < Player
   private
 
   def set_name
-    puts 
+    puts
     prompt :player_name
 
     n = ''
@@ -152,7 +151,7 @@ class Move
     "p" => "Paper",
     "sc" => "Scissors",
     "l" => "Lizard",
-    "sp" => "Spock",
+    "sp" => "Spock"
   }
   WINNING_COMBINATIONS = {
     "Rock" => ["Scissors", "Lizard"],
@@ -225,7 +224,7 @@ class History
   def reset
     self.moves = []
     self.last_winning_move = nil
-    self.last_losing_move = nil 
+    self.last_losing_move = nil
   end
 
   def to_s
@@ -258,7 +257,7 @@ class RPSGame
       display_champion
       break unless play_again?
       reset_scores
-      reset_histories 
+      reset_histories
     end
     display_goodbye_message
   end
@@ -280,13 +279,13 @@ class RPSGame
   end
 
   def display_rules
-    puts 
-    prompt :rules 
+    puts
+    prompt :rules
   end
 
   def choose_opponent
     answer = ''
-    loop do 
+    loop do
       puts format("=> #{MESSAGES[:choose_opponent]}", name: human.name.to_s)
       answer = gets.chomp
       break if OPPONENTS.keys.include?(answer)
@@ -300,11 +299,12 @@ class RPSGame
   def display_score
     human_score = "#{human.name}: #{human.score.value}"
     computer_score = "#{computer.name}: #{computer.score.value}"
-    puts "=> #{human_score}, #{computer_score}" 
+    puts "=> #{human_score}, #{computer_score}"
   end
 
   def choose_moves
     display_score
+    puts
     human.choose
     computer.choose(human)
   end
@@ -375,7 +375,7 @@ class RPSGame
     puts "=> #{human.name}'s History:\n#{human_history}"
     puts
     puts "=> #{computer.name}'s History:\n#{computer_history}"
-    puts  
+    puts
   end
 
   def display_champion
