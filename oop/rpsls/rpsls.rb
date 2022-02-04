@@ -171,9 +171,9 @@ class Move
     WINNING_COMBINATIONS[value].include?(other_move.value)
   end
 
-  def <(other_move)
-    WINNING_COMBINATIONS[other_move.value].include?(value)
-  end
+  # def <(other_move)
+  #   WINNING_COMBINATIONS[other_move.value].include?(value)
+  # end
 
   def to_s
     @value
