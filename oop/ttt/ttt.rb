@@ -401,11 +401,6 @@ class TTTGame
     clear
   end
 
-  def display_play_again_message
-    prompt :play_again
-    puts ""
-  end
-
   def display_goodbye_message
     prompt :goodbye_message
     puts ""
@@ -420,7 +415,6 @@ class TTTGame
       update_score
       display_result
       break if game_over?
-      # display_play_again_message
     end
   end
 end
