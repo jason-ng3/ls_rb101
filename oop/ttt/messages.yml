@@ -1,0 +1,28 @@
+---
+:welcome_message: |-
+  Welcome to Tic Tac Toe!
+
+  Tic Tac Toe is a 2-player board game played on a 3x3 grid. Players take turns marking a square. The first player to mark 3 squares in a row wins.
+
+  The first player to 5 wins is the champion! Let's begin!
+:player_name: What is your name?
+:invalid_input: Invalid input.
+:player_marker: 'Computer is O. Choose a marker from the alphabet (A-Z):'
+:continue: Press Enter to continue.
+:invalid_number: Please enter a number.
+:who_goes_first: |-
+  => Who would you like to go first? Enter a number:
+  1) %{name}
+  2) Computer
+  3) Let Computer choose
+:difficulty: |-
+  Choose difficulty. Enter a number:
+  1) Easy
+  2) Medium
+  3) Advanced
+:invalid_square: Invalid square.
+:tie: It's a tie!
+:play_again?: Play again? (y/n)
+:invalid_yes_no: Please enter y or n.
+:play_again: Let's play again!
+:goodbye_message: Thank you for playing Tic Tac Toe! Goodbye!
