@@ -2,7 +2,7 @@ require 'yaml'
 
 MESSAGES = YAML.load_file("messages.yml")
 
-module Printable
+module Displayable
   def clear
     system 'clear'
   end
@@ -24,6 +24,51 @@ module Printable
     prompt :continue
     gets
   end
+
+  def display_welcome_message
+    clear
+    prompt :welcome_message
+    puts ""
+  end
+
+  def display_board
+    puts ""
+    board.draw
+    puts ""
+  end
+
+  def clear_screen_and_display_board
+    clear
+    display_score
+    display_board
+  end
+
+  def display_result
+    clear_screen_and_display_board
+    case board.winning_marker
+    when human.marker then    puts "=> #{human.name} won!"
+    when computer.marker then puts "=> #{computer.name} won!"
+    else                      prompt :tie
+    end
+    puts ''
+    continue unless game_over?
+  end
+
+  def display_score
+    puts "=> #{human.name} (#{human.marker}): #{human.score}, " \
+         "#{computer.name} (#{computer.marker}): #{computer.score}"
+    puts ""
+  end
+
+  def display_champion
+    champion = (human.score == 5 ? human.name : computer.name.to_s)
+    puts "=> #{champion} is the champion!"
+  end
+
+  def display_goodbye_message
+    prompt :goodbye_message
+    puts ""
+  end
 end
 
 class Board
@@ -32,11 +77,16 @@ class Board
                   [[1, 5, 9], [3, 5, 7]]              # diagonal
   CENTER_SQUARE = 5
 
-  attr_reader :squares
+  attr_reader :squares, :human_marker
 
   def initialize
     @squares = {}
+    @human_marker = nil
     reset
+  end
+
+  def retrieve_human_marker(marker)
+    self.human_marker = marker
   end
 
   # rubocop:disable Metrics/AbcSize
@@ -103,6 +153,8 @@ class Board
 
   private
 
+  attr_writer :human_marker
+
   def three_identical_markers?(squares)
     markers = squares.select(&:marked?).map(&:marker)
     return false if markers.size != 3
@@ -133,15 +185,11 @@ class Square
 end
 
 class Player
-  include Printable
-
-  ALPHABET = ('a'..'n').to_a + ('p'..'z').to_a
+  include Displayable
 
   attr_reader :name, :marker, :score
 
   def initialize
-    @name = retrieve_name
-    @marker = retrieve_marker
     @score = 0
   end
 
@@ -155,15 +203,40 @@ class Player
 
   private
 
-  attr_writer :name, :score
+  attr_writer :score
+end
+
+class Human < Player
+  ALPHABET = ('a'..'n').to_a + ('p'..'z').to_a
+
+  attr_reader :board
+
+  def initialize(board)
+    @board = board
+    @name = retrieve_name
+    @marker = retrieve_marker
+  end
+
+  def moves
+    square = ''
+    loop do
+      puts "=> Choose a square: (#{joinor(board.unmarked_keys)})"
+      square = gets.chomp
+      break if board.unmarked_keys.map(&:to_s).include?(square)
+      prompt :invalid_square
+    end
+    board[square.to_i] = marker
+  end
+
+  private
 
   def retrieve_name
     name = ''
+    prompt :player_name
     loop do
-      prompt :player_name
       name = gets.chomp
       break if name =~ /[\w]/
-      prompt :invalid_input
+      prompt :invalid_name
     end
     name
   end
@@ -182,133 +255,23 @@ class Player
 end
 
 class Computer < Player
-  attr_accessor :name
-
-  def initialize(marker)
-    @name = nil
-    @marker = marker
-  end
-end
-
-class TTTGame
-  include Printable
-
   COMPUTER_MARKER = 'O'
-  VALID_ANSWERS = {
-    '1' => { difficulty: 'Easy', opponent: 'WALL-E' },
-    '2' => { difficulty: 'Medium', opponent: 'R2D2' },
-    '3' => { difficulty: 'Advanced', opponent: 'Optimus Prime' }
+  OPTIONS = {
+    '1' => { difficulty: 'Easy', name: 'WALL-E' },
+    '2' => { difficulty: 'Medium', name: 'R2D2' },
+    '3' => { difficulty: 'Advanced', name: 'Optimus Prime' }
   }
 
-  def play_match
-    loop do
-      reset_score
-      choose_who_goes_first
-      choose_difficulty_and_opponent
-      main_game
-      display_champion
-      break unless play_again?
-    end
-    display_goodbye_message
+  attr_reader :name, :board, :marker, :difficulty
+
+  def initialize(board)
+    @board = board
+    @name = nil
+    @marker = COMPUTER_MARKER
+    @difficulty = nil
   end
 
-  private
-
-  attr_accessor :current_marker, :difficulty, :first_to_move
-  attr_reader :board, :human, :computer
-
-  def initialize
-    display_welcome_message
-    @board = Board.new
-    @human = Player.new
-    @computer = Computer.new(COMPUTER_MARKER)
-    @first_to_move = nil
-    @current_marker = nil
-  end
-
-  def display_welcome_message
-    clear
-    prompt :welcome_message
-    puts ""
-  end
-
-  def ask_who_goes_first
-    puts ''
-    answer = ''
-    loop do
-      puts format(MESSAGES[:who_goes_first], name: human.name.to_s)
-      answer = gets.chomp
-      break if VALID_ANSWERS.keys.include?(answer)
-      prompt :invalid_number
-    end
-    answer
-  end
-
-  def choose_who_goes_first
-    answer = ask_who_goes_first
-
-    marker =
-      case answer
-      when '1' then human.marker
-      when '2' then COMPUTER_MARKER
-      when '3' then [human.marker, COMPUTER_MARKER].sample
-      end
-
-    self.first_to_move = marker
-    self.current_marker = marker
-  end
-
-  def choose_difficulty_and_opponent
-    puts ''
-    answer = ''
-    loop do
-      prompt :difficulty
-      answer = gets.chomp
-      break if VALID_ANSWERS.keys.include?(answer)
-      prompt :invalid_number
-    end
-    self.difficulty = VALID_ANSWERS[answer][:difficulty]
-    computer.name = VALID_ANSWERS[answer][:opponent]
-  end
-
-  def reset_score
-    human.reset_score
-    computer.reset_score
-  end
-
-  def display_board
-    puts ""
-    board.draw
-    puts ""
-  end
-
-  def player_move
-    loop do
-      current_player_moves
-      break if board.someone_won? || board.full?
-      clear_screen_and_display_board if human_turn?
-    end
-  end
-
-  def clear_screen_and_display_board
-    clear
-    display_score
-    display_board
-  end
-
-  def human_moves
-    square = ''
-    loop do
-      puts "=> Choose a square: (#{joinor(board.unmarked_keys)})"
-      square = gets.chomp.to_i
-      break if board.unmarked_keys.include?(square)
-      prompt :invalid_square
-    end
-    board[square] = human.marker
-  end
-
-  def computer_moves
-    difficulty
+  def moves
     square =
       case difficulty
       when 'Easy' then easy_difficulty_move
@@ -316,8 +279,20 @@ class TTTGame
       when 'Advanced' then advanced_difficulty_move
       end
 
-    board[square] = computer.marker
+    board[square] = marker
   end
+
+  def retrieve_difficulty(num)
+    self.difficulty = OPTIONS[num][:difficulty]
+  end
+
+  def retrieve_name(num)
+    self.name = OPTIONS[num][:name]
+  end
+
+  private
+
+  attr_writer :name, :difficulty
 
   def advanced_difficulty_move
     if board.center_square_empty?
@@ -330,36 +305,119 @@ class TTTGame
   end
 
   def medium_difficulty_move
-    board.immediate_threat(human.marker) || easy_difficulty_move
+    board.immediate_threat(board.human_marker) || easy_difficulty_move
   end
 
   def easy_difficulty_move
     board.unmarked_keys.sample
   end
+end
+
+class TTTGame
+  include Displayable
+
+  def play_match
+    loop do
+      set_human_marker
+      choose_who_goes_first
+      choose_difficulty_and_opponent
+      reset_score
+      main_game
+      display_champion
+      break unless play_again?
+    end
+    display_goodbye_message
+  end
+
+  private
+
+  VALID_CHOICES = ['1', '2', '3']
+  WINNING_SCORE = 5
+
+  attr_accessor :current_marker, :first_to_move
+  attr_reader :board, :human, :computer
+
+  def initialize
+    display_welcome_message
+    @board = Board.new
+    @human = Human.new(board)
+    @computer = Computer.new(board)
+    @first_to_move = nil
+    @current_marker = nil
+  end
+
+  def set_human_marker
+    board.retrieve_human_marker(human.marker)
+  end
+
+  def ask_who_goes_first
+    puts ''
+    choice = ''
+    loop do
+      puts format(MESSAGES[:who_goes_first], name: human.name.to_s)
+      choice = gets.chomp
+      break if VALID_CHOICES.include?(choice)
+    end
+    choice
+  end
+
+  def choose_who_goes_first
+    choice = ask_who_goes_first
+
+    marker =
+      case choice
+      when '1' then human.marker
+      when '2' then computer.marker
+      when '3' then [human.marker, computer.marker].sample
+      end
+
+    self.first_to_move = marker
+    self.current_marker = marker
+  end
+
+  def choose_difficulty_and_opponent
+    puts ''
+    choice = ''
+    loop do
+      prompt :difficulty
+      choice = gets.chomp
+      break if VALID_CHOICES.include?(choice)
+    end
+    computer.retrieve_difficulty(choice)
+    computer.retrieve_name(choice)
+  end
+
+  def reset
+    board.reset
+    self.current_marker = first_to_move
+    clear
+  end
+
+  def reset_score
+    human.reset_score
+    computer.reset_score
+  end
+
+  def player_move
+    loop do
+      current_player_moves
+      break if board.someone_won? || board.full?
+      clear_screen_and_display_board if human_turn?
+    end
+  end
 
   def current_player_moves
     if human_turn?
-      human_moves
-      self.current_marker = COMPUTER_MARKER
+      human.moves
+      self.current_marker = computer.marker
     else
-      computer_moves
+      computer.moves
       self.current_marker = human.marker
     end
   end
 
   def human_turn?
     current_marker == human.marker
-  end
-
-  def display_result
-    clear_screen_and_display_board
-    case board.winning_marker
-    when human.marker then    puts "=> #{human.name} won!"
-    when computer.marker then puts "=> #{computer.name} won!"
-    else                      prompt :tie
-    end
-    puts ''
-    continue unless game_over?
   end
 
   def update_score
@@ -370,18 +428,7 @@ class TTTGame
   end
 
   def game_over?
-    human.score == 5 || computer.score == 5
-  end
-
-  def display_score
-    puts "=> #{human.name} (#{human.marker}): #{human.score}, " \
-         "#{computer.name} (#{computer.marker}): #{computer.score}"
-    puts ""
-  end
-
-  def display_champion
-    champion = (human.score == 5 ? human.name : computer.name.to_s)
-    puts "=> #{champion} is the champion!"
+    human.score == WINNING_SCORE || computer.score == WINNING_SCORE
   end
 
   def play_again?
@@ -393,17 +440,6 @@ class TTTGame
       prompt :invalid_yes_no
     end
     answer == 'y'
-  end
-
-  def reset
-    board.reset
-    self.current_marker = first_to_move
-    clear
-  end
-
-  def display_goodbye_message
-    prompt :goodbye_message
-    puts ""
   end
 
   def main_game
