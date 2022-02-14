@@ -2,11 +2,7 @@ require 'yaml'
 
 MESSAGES = YAML.load_file("messages.yml")
 
-module Displayable
-  def clear
-    system 'clear'
-  end
-
+module Output
   def prompt(message)
     puts "=> #{MESSAGES[message]}"
   end
@@ -19,10 +15,17 @@ module Displayable
     else        list[0..-2].join(delimiter) + "#{delimiter}#{word} #{list[-1]}"
     end
   end
+end
 
-  def continue
-    prompt :continue
-    gets
+module Displayable
+  def clear
+    system 'clear'
+  end
+
+  def clear_screen_and_display_board
+    clear
+    display_score
+    display_board
   end
 
   def display_welcome_message
@@ -37,12 +40,6 @@ module Displayable
     puts ""
   end
 
-  def clear_screen_and_display_board
-    clear
-    display_score
-    display_board
-  end
-
   def display_result
     clear_screen_and_display_board
     case board.winning_marker
@@ -52,6 +49,11 @@ module Displayable
     end
     puts ''
     continue unless game_over?
+  end
+
+  def continue
+    prompt :continue
+    gets
   end
 
   def display_score
@@ -185,7 +187,7 @@ class Square
 end
 
 class Player
-  include Displayable
+  include Output
 
   attr_reader :name, :marker, :score
 
@@ -314,13 +316,14 @@ class Computer < Player
 end
 
 class TTTGame
+  include Output
   include Displayable
 
   def play_match
     loop do
       set_human_marker
-      choose_who_goes_first
       choose_difficulty_and_opponent
+      choose_who_goes_first
       reset_score
       main_game
       display_champion
@@ -354,7 +357,9 @@ class TTTGame
     puts ''
     choice = ''
     loop do
-      puts format(MESSAGES[:who_goes_first], name: human.name.to_s)
+      puts "You will be playing against #{computer.name}!"
+      puts format(MESSAGES[:who_goes_first], name: human.name.to_s,
+                                             opponent: computer.name.to_s)
       choice = gets.chomp
       break if VALID_CHOICES.include?(choice)
     end
@@ -372,7 +377,6 @@ class TTTGame
       end
 
     self.first_to_move = marker
-    self.current_marker = marker
   end
 
   def choose_difficulty_and_opponent
@@ -389,8 +393,22 @@ class TTTGame
 
   def reset
     board.reset
-    self.current_marker = first_to_move
+    determine_first_to_move
     clear
+  end
+
+  def determine_first_to_move
+    self.current_marker =
+      just_started? ? first_to_move : alternate_first_to_move
+  end
+
+  def alternate_first_to_move
+    self.first_to_move =
+      first_to_move == human.marker ? computer.marker : human.marker
+  end
+
+  def just_started?
+    human.score == 0 && computer.score == 0
   end
 
   def reset_score
